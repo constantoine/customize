@@ -111,3 +111,5 @@ buildNumber.properties
 
 # Common working directory
 run/
+
+!/target/customization-1.0-SNAPSHOT.jar
