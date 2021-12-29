@@ -1,0 +1,8 @@
+name: Customization
+version: '${project.version}'
+main: xyz.lalivre.customization.Customization
+api-version: 1.18
+commands:
+  death:
+    description: Get player's last death location.
+    usage: /<command> [player]
