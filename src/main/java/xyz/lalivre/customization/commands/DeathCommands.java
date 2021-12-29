@@ -6,21 +6,23 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DeathCommands implements CommandExecutor {
+    private final JavaPlugin plugin;
     public ConcurrentHashMap<UUID, Location> deaths;
 
-    public DeathCommands(ConcurrentHashMap<UUID, Location> deaths) {
+    public DeathCommands(JavaPlugin plugin, ConcurrentHashMap<UUID, Location> deaths) {
+        this.plugin = plugin;
         this.deaths = deaths;
     }
 
-    private void sendLastDeathCoordinates(CommandSender sender, Player player) {
-        Location pos = this.deaths.get(player.getUniqueId());
+    private void sendLastDeathCoordinates(@NotNull CommandSender sender, @NotNull Player player) {
+        final Location pos = this.deaths.get(player.getUniqueId());
 
         // If self requested
         if ((sender instanceof Player) && ((Player) sender).getUniqueId() == player.getUniqueId()) {
@@ -39,17 +41,17 @@ public class DeathCommands implements CommandExecutor {
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
         switch (args.length) {
-            case 0:
+            case 0 -> {
                 if (!(sender instanceof Player)) {
                     sender.sendMessage(ChatColor.RED + "You need to specify one player.");
                     return false;
                 }
-                sendLastDeathCoordinates(sender, (Player)sender);
-                break;
-            case 1:
-                Player player = sender.getServer().getPlayerExact(args[0]);
+                sendLastDeathCoordinates(sender, (Player) sender);
+            }
+            case 1 -> {
+                final Player player = plugin.getServer().getPlayerExact(args[0]);
                 if (player == null) {
                     sender.sendMessage(ChatColor.RED + "Invalid player name.");
                     return false;
@@ -60,10 +62,11 @@ public class DeathCommands implements CommandExecutor {
                     return false;
                 }
                 sendLastDeathCoordinates(sender, player);
-                break;
-            default:
+            }
+            default -> {
                 sender.sendMessage(ChatColor.RED + "Only one player may be specified.");
                 return false;
+            }
         }
         return true;
     }
