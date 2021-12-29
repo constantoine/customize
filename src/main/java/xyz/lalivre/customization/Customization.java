@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.plugin.java.JavaPlugin;
 import xyz.lalivre.customization.commands.DeathCommands;
+import xyz.lalivre.customization.commands.DeathCommandsCompletions;
 import xyz.lalivre.customization.events.DeathEvents;
 import xyz.lalivre.customization.events.SleepEvents;
 import xyz.lalivre.customization.runnables.DayNightRunnables;
@@ -19,11 +20,13 @@ public final class Customization extends JavaPlugin {
 
         DeathEvents deathEvents = new DeathEvents(this);
         SleepEvents sleepEvents = new SleepEvents(this);
+        DeathCommandsCompletions deathCommandsCompletions = new DeathCommandsCompletions(this);
         DeathCommands deathCommands = new DeathCommands(this, deathEvents.getDeaths());
 
         server.getPluginManager().registerEvents(deathEvents, this);
         server.getPluginManager().registerEvents(sleepEvents, this);
         Objects.requireNonNull(getCommand("death")).setExecutor(deathCommands);
+        Objects.requireNonNull(getCommand("death")).setTabCompleter(deathCommandsCompletions);
 
         server.getConsoleSender().sendMessage(
                 Component
