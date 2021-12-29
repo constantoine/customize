@@ -54,7 +54,7 @@ public class DeathEvents implements Listener {
                     causeText = " s'est fait⋅e applatir.";
                 }
                 case FALL -> {
-                    sound = Sound.ENTITY_PLAYER_BIG_FALL;
+                    sound = Sound.BLOCK_ANVIL_LAND;
                     causeText = " a découvert la gravité.";
                 }
                 case FLY_INTO_WALL -> {
