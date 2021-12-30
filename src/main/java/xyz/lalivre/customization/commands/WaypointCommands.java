@@ -196,8 +196,9 @@ public class WaypointCommands implements CommandExecutor, TabCompleter {
                 StringUtil.copyPartialMatches(args[0], waypoints, completions);
             }
             case 2 -> {
-                if (args[0].equals("tp") || args[0].equals("remove"))
-                StringUtil.copyPartialMatches(args[1], waypoints, completions);
+                if (args[0].equals("tp") || args[0].equals("remove")) {
+                    StringUtil.copyPartialMatches(args[1], waypoints, completions);
+                }
             }
         }
         Collections.sort(completions);
