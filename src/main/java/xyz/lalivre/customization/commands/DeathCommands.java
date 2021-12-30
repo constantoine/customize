@@ -5,14 +5,16 @@ import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class DeathCommands implements CommandExecutor {
+public class DeathCommands implements CommandExecutor, TabCompleter {
     private final JavaPlugin plugin;
     public ConcurrentHashMap<UUID, Location> deaths;
 
@@ -21,23 +23,48 @@ public class DeathCommands implements CommandExecutor {
         this.deaths = deaths;
     }
 
+    @Override
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, String[] args) {
+        // You can only get position for one (1) player
+        if (args.length > 1) {
+            return Collections.emptyList();
+        }
+        List<String> completions = new ArrayList<>();
+        // If this is a player, can only autocomplete on other player's names if the player is OP
+        if (sender instanceof Player) {
+            if (!sender.isOp()) {
+                completions.add(sender.getName());
+                return completions;
+            }
+        }
+        Collection<? extends Player> players = plugin.getServer().getOnlinePlayers();
+        ArrayList<String> names = new ArrayList<>(players.size());
+
+        for (Player player : players) {
+            names.add(player.getName());
+        }
+        StringUtil.copyPartialMatches(args[0], names, completions);
+        Collections.sort(completions);
+        return completions;
+    }
+
     private void sendLastDeathCoordinates(@NotNull CommandSender sender, @NotNull Player player) {
         final Location pos = this.deaths.get(player.getUniqueId());
 
         // If self requested
         if ((sender instanceof Player) && ((Player) sender).getUniqueId() == player.getUniqueId()) {
             if (pos == null) {
-                sender.sendMessage("You haven't died yet!");
+                sender.sendMessage("Tu n'es pas encore mort⋅e !");
                 return;
             }
-            sender.sendMessage(String.format("You died at: %d, %d, %d", pos.getBlockX(), pos.getBlockY(), pos.getBlockZ()));
+            sender.sendMessage(String.format("Ta dernière mort était à %d, %d, %d", pos.getBlockX(), pos.getBlockY(), pos.getBlockZ()));
             return;
         }
         if (pos == null) {
-            sender.sendMessage(String.format("%s hasn't died yet!", player.getName()));
+            sender.sendMessage(String.format("%s n'est pas encore mort⋅e !", player.getName()));
             return;
         }
-        sender.sendMessage(String.format("%s died at: %d, %d, %d", player.getName(), pos.getBlockX(), pos.getBlockY(), pos.getBlockZ()));
+        sender.sendMessage(String.format("La dernière mort de %s était à %d, %d, %d", player.getName(), pos.getBlockX(), pos.getBlockY(), pos.getBlockZ()));
     }
 
     @Override
@@ -45,7 +72,7 @@ public class DeathCommands implements CommandExecutor {
         switch (args.length) {
             case 0 -> {
                 if (!(sender instanceof Player)) {
-                    sender.sendMessage(ChatColor.RED + "You need to specify one player.");
+                    sender.sendMessage(ChatColor.RED + "Tu dois spécifier un pseudo.");
                     return false;
                 }
                 sendLastDeathCoordinates(sender, (Player) sender);
@@ -53,18 +80,18 @@ public class DeathCommands implements CommandExecutor {
             case 1 -> {
                 final Player player = plugin.getServer().getPlayerExact(args[0]);
                 if (player == null) {
-                    sender.sendMessage(ChatColor.RED + "Invalid player name.");
+                    sender.sendMessage(ChatColor.RED + "Pseudo invalide.");
                     return false;
                 }
                 // If requested by another player, check that they're OP
                 if ((sender instanceof Player) && ((Player) sender).getUniqueId() != player.getUniqueId() && !player.isOp()) {
-                    sender.sendMessage(ChatColor.RED + "You don't have permissions to request someone else's death point.");
+                    sender.sendMessage(ChatColor.RED + "Tu t'as pas la permission pour voir la mort des autres.");
                     return false;
                 }
                 sendLastDeathCoordinates(sender, player);
             }
             default -> {
-                sender.sendMessage(ChatColor.RED + "Only one player may be specified.");
+                sender.sendMessage(ChatColor.RED + "Tu ne peux regarder qu'une mort à la fois.");
                 return false;
             }
         }

@@ -20,8 +20,8 @@ public class DayNightRunnables implements Runnable {
 
     public DayNightRunnables(@NotNull JavaPlugin plugin) {
         this.plugin = plugin;
-        for (World world: this.plugin.getServer().getWorlds()) {
-            if (world.getEnvironment() == World.Environment.NORMAL){
+        for (World world : this.plugin.getServer().getWorlds()) {
+            if (world.getEnvironment() == World.Environment.NORMAL) {
                 this.overworldID = world.getUID();
                 break;
             }
@@ -52,7 +52,7 @@ public class DayNightRunnables implements Runnable {
                     .text("La nuit tombe.")
                     .color(NamedTextColor.RED);
         }
-        for (Player player: players) {
+        for (Player player : players) {
             player.sendActionBar(textComponent);
             player.playSound(player.getLocation(), sound, 0.3f, 1.0f);
         }

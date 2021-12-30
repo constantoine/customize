@@ -6,3 +6,6 @@ commands:
   death:
     description: Get player's last death location.
     usage: /<command> [player]
+  waypoint:
+    description: Manage waypoints to keep track of interesting locatio,s
+    usage: /<command> [list|add|remove|[waypointName]] [waypointName]

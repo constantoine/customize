@@ -14,6 +14,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -49,7 +50,7 @@ public class DeathEvents implements Listener {
                     sound = Sound.ENTITY_WITCH_DRINK;
                     causeText = " a accepté un bonbon de la part d'un inconnu.";
                 }
-                case FALLING_BLOCK ->  {
+                case FALLING_BLOCK -> {
                     sound = Sound.BLOCK_ANVIL_LAND;
                     causeText = " s'est fait⋅e applatir.";
                 }
@@ -80,11 +81,13 @@ public class DeathEvents implements Listener {
                                 .color(NamedTextColor.RED)
                 );
 
+        this.plugin.getServer().getConsoleSender().sendMessage(Objects.requireNonNull(event.deathMessage()));
+
         event.deathMessage(textComponent);
 
         Collection<? extends Player> players = this.plugin.getServer().getOnlinePlayers();
 
-        for (Player p: players) {
+        for (Player p : players) {
             p.sendActionBar(textComponent);
             p.playSound(p.getLocation(), sound, 0.8f, 1.0f);
         }
