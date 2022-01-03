@@ -14,7 +14,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -81,7 +80,10 @@ public class DeathEvents implements Listener {
                                 .color(NamedTextColor.RED)
                 );
 
-        this.plugin.getServer().getConsoleSender().sendMessage(Objects.requireNonNull(event.deathMessage()));
+        Component message = event.deathMessage();
+        if (message != null) {
+            this.plugin.getServer().getConsoleSender().sendMessage(message);
+        }
 
         event.deathMessage(textComponent);
 

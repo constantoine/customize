@@ -21,7 +21,7 @@ public final class Customization extends JavaPlugin {
         DeathEvents deathEvents = new DeathEvents(this);
         SleepEvents sleepEvents = new SleepEvents(this);
         DeathCommands deathCommands = new DeathCommands(this, deathEvents.getDeaths());
-        WaypointCommands waypointCommands = new WaypointCommands();
+        WaypointCommands waypointCommands = new WaypointCommands(this);
 
         server.getPluginManager().registerEvents(deathEvents, this);
         server.getPluginManager().registerEvents(sleepEvents, this);

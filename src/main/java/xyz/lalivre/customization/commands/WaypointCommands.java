@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -11,19 +12,22 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import xyz.lalivre.customization.types.WaypointData;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class WaypointCommands implements CommandExecutor, TabCompleter {
-    private final ConcurrentHashMap<UUID, ConcurrentHashMap<String, Location>> waypoints;
+    private final JavaPlugin plugin;
 
-    public WaypointCommands() {
-        this.waypoints = new ConcurrentHashMap<>();
+    public WaypointCommands(@NotNull JavaPlugin plugin) {
+        this.plugin = plugin;
     }
+
 
     @NotNull
     private TextComponent waypointToComponent(Map.Entry<String, Location> entry) {
@@ -34,12 +38,14 @@ public class WaypointCommands implements CommandExecutor, TabCompleter {
     }
 
     @NotNull
-    private TextComponent operationList(ConcurrentHashMap<String, Location> playerWaypoints) {
+    private TextComponent operationList(@NotNull Player player) {
+        HashMap<String, Location> waypoints = WaypointData.getPlayerWaypoints(player, this.plugin);
+
         TextComponent.Builder component = Component.empty().toBuilder();
-        if (playerWaypoints == null || playerWaypoints.size() == 0) {
+        if (waypoints.size() == 0) {
             component.append(Component.text("Aucun waypoint à afficher.").color(NamedTextColor.RED));
         } else {
-            Iterator<Map.Entry<String, Location>> iterator = new TreeMap<>(playerWaypoints).entrySet().iterator();
+            Iterator<Map.Entry<String, Location>> iterator = new TreeMap<>(waypoints).entrySet().iterator();
             while (iterator.hasNext()) {
                 component.append(waypointToComponent(iterator.next()));
                 if (iterator.hasNext()) {
@@ -52,13 +58,8 @@ public class WaypointCommands implements CommandExecutor, TabCompleter {
 
     @NotNull
     private TextComponent operationAdd(@NotNull Player player, @NotNull String waypointName) {
-        if (this.waypoints.get(player.getUniqueId()) == null) {
-            player.getServer().getConsoleSender().sendMessage(Component.text("[CUSTOMIZATION]: ").color(NamedTextColor.GOLD).append(
-                    Component.text(String.format("creation de la liste de waypoints de %s.", player.getName()))
-            ));
-            this.waypoints.put(player.getUniqueId(), new ConcurrentHashMap<>());
-        }
-        ConcurrentHashMap<String, Location> playerWaypoints = this.waypoints.get(player.getUniqueId());
+        HashMap<String, Location> playerWaypoints = WaypointData.getPlayerWaypoints(player, this.plugin);
+        PersistentDataContainer container = player.getPersistentDataContainer();
         if (playerWaypoints.get(waypointName) != null) {
             return Component.text("Ce waypoint existe déjà.").color(NamedTextColor.RED);
         }
@@ -66,6 +67,12 @@ public class WaypointCommands implements CommandExecutor, TabCompleter {
             return Component.text("Ce nom est interdit.").color(NamedTextColor.RED);
         }
         playerWaypoints.put(waypointName, player.getLocation());
+        try {
+            container.set(new NamespacedKey(this.plugin, "waypoints/" + waypointName), new WaypointData(this.plugin), player.getLocation());
+        } catch (Exception e) {
+            return Component.text(String.format("Nom de waypoint invalide: %s", e.getMessage())).color(NamedTextColor.RED);
+        }
+
         player.getServer().getConsoleSender().sendMessage(Component.text("[CUSTOMIZATION]: ").color(NamedTextColor.GOLD).append(
                 Component.text(String.format("creation du waypoint %s pour %s.", waypointName, player.getName()))
         ));
@@ -75,12 +82,17 @@ public class WaypointCommands implements CommandExecutor, TabCompleter {
     }
 
     @NotNull
-    private TextComponent operationRemove(Player player, @NotNull String waypointName) {
-        ConcurrentHashMap<String, Location> playerWaypoints = this.waypoints.get(player.getUniqueId());
-        if (playerWaypoints == null || !playerWaypoints.containsKey(waypointName)) {
+    private TextComponent operationRemove(@NotNull Player player, @NotNull String waypointName) {
+        HashMap<String, Location> playerWaypoints = WaypointData.getPlayerWaypoints(player, this.plugin);
+        PersistentDataContainer container = player.getPersistentDataContainer();
+        if (!playerWaypoints.containsKey(waypointName)) {
             return Component.text("Ce waypoint n'existe pas.").color(NamedTextColor.RED);
         }
-        playerWaypoints.remove(waypointName);
+        try {
+            container.remove(new NamespacedKey(this.plugin, "waypoints/" + waypointName));
+        } catch (Exception e) {
+            return Component.text(String.format("Nom de waypoint invalide: %s", e.getMessage())).color(NamedTextColor.RED);
+        }
         player.getServer().getConsoleSender().sendMessage(Component.text("[CUSTOMIZATION]: ").color(NamedTextColor.GOLD).append(
                 Component.text(String.format("suppression du waypoint %s pour %s.", waypointName, player.getName()))
         ));
@@ -90,18 +102,17 @@ public class WaypointCommands implements CommandExecutor, TabCompleter {
     }
 
     @NotNull
-    private TextComponent operationSee(ConcurrentHashMap<String, Location> playerWaypoints, @NotNull String waypointName) {
-        if (playerWaypoints == null || !playerWaypoints.containsKey(waypointName)) {
+    private TextComponent operationSee(@NotNull Player player, @NotNull String waypointName) {
+        HashMap<String, Location> playerWaypoints = WaypointData.getPlayerWaypoints(player, this.plugin);
+        if (!playerWaypoints.containsKey(waypointName)) {
             return Component.text("Ce waypoint n'existe pas.").color(NamedTextColor.RED);
         }
         return waypointToComponent(new AbstractMap.SimpleEntry<>(waypointName, playerWaypoints.get(waypointName)));
     }
 
-    private TextComponent operationTp(ConcurrentHashMap<String, Location> playerWaypoints, @NotNull Player player, @NotNull String waypointName) {
-        if (!player.isOp()) {
-            return Component.text("Tu n'as pas les permissions pour faire ça.").color(NamedTextColor.RED);
-        }
-        if (playerWaypoints == null || !playerWaypoints.containsKey(waypointName)) {
+    private TextComponent operationTp(@NotNull Player player, @NotNull String waypointName) {
+        HashMap<String, Location> playerWaypoints = WaypointData.getPlayerWaypoints(player, this.plugin);
+        if (!playerWaypoints.containsKey(waypointName)) {
             return Component.text("Ce waypoint n'existe pas.").color(NamedTextColor.RED);
         }
         Location waypoint = playerWaypoints.get(waypointName);
@@ -138,23 +149,21 @@ public class WaypointCommands implements CommandExecutor, TabCompleter {
             return false;
         }
 
-        ConcurrentHashMap<String, Location> playerWaypoints = waypoints.get(player.getUniqueId());
-
         TextComponent component;
 
         switch (args.length) {
             case 1 -> {
                 if (args[0].equals("list"))
-                    component = operationList(playerWaypoints);
+                    component = operationList(player);
                 else if (!args[0].equals("tp") && !args[0].equals("add") && !args[0].equals("remove")) {
-                    component = (operationSee(playerWaypoints, args[0]));
+                    component = (operationSee(player, args[0]));
                 } else {
                     return false;
                 }
             }
             case 2 -> {
                 switch (args[0]) {
-                    case "tp" -> component = (operationTp(playerWaypoints, player, args[1]));
+                    case "tp" -> component = (operationTp(player, args[1]));
                     case "add" -> component = (operationAdd(player, args[1]));
                     case "remove" -> component = (operationRemove(player, args[1]));
                     default -> {
@@ -185,11 +194,9 @@ public class WaypointCommands implements CommandExecutor, TabCompleter {
         if (player.isOp()) {
             commands.add("tp");
         }
-        ArrayList<String> waypoints = new ArrayList<>();
-        ConcurrentHashMap<String, Location> playerWaypoints = this.waypoints.get(player.getUniqueId());
-        if (playerWaypoints != null) {
-            playerWaypoints.forEach((name, location) -> waypoints.add(name));
-        }
+        Set<String> waypoints = new HashSet<>();
+        HashMap<String, Location> playerWaypoints = WaypointData.getPlayerWaypoints(player, this.plugin);
+        playerWaypoints.forEach((name, location) -> waypoints.add(name));
         switch (args.length) {
             case 1 -> {
                 StringUtil.copyPartialMatches(args[0], commands, completions);
