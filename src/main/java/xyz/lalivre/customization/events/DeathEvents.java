@@ -3,37 +3,37 @@ package xyz.lalivre.customization.events;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import xyz.lalivre.customization.types.WaypointData;
 
 import java.util.Collection;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class DeathEvents implements Listener {
     private final JavaPlugin plugin;
-    public static ConcurrentHashMap<UUID, Location> deaths = new ConcurrentHashMap<>();
 
     public DeathEvents(@NotNull JavaPlugin plugin) {
         this.plugin = plugin;
     }
 
     @NotNull
-    public ConcurrentHashMap<UUID, Location> getDeaths() {
-        return deaths;
+    public static NamespacedKey deathKey(@NotNull JavaPlugin plugin) {
+        return new NamespacedKey(plugin, "death");
     }
 
     @EventHandler
     public void onPlayerDeath(@NotNull PlayerDeathEvent event) {
         Player player = event.getPlayer();
-        deaths.put(player.getUniqueId(), player.getLocation());
+        PersistentDataContainer container = player.getPersistentDataContainer();
+        container.set(deathKey(this.plugin), new WaypointData(this.plugin), player.getLocation());
 
         EntityDamageEvent cause = event.getEntity().getLastDamageCause();
         Sound sound = Sound.ENTITY_WITHER_SPAWN;

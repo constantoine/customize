@@ -4,16 +4,21 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Statistic;
 import org.bukkit.StructureType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerStatisticIncrementEvent;
 import org.jetbrains.annotations.NotNull;
 
-public class PlayerInteractEvents implements Listener {
+public class PlayerStatisticIncrementEvents implements Listener {
     @EventHandler
-    public void onPlayerInteract(@NotNull PlayerInteractEvent event) {
+    public void onEntitySpawn(@NotNull PlayerStatisticIncrementEvent event) {
+        if (event.getStatistic() != Statistic.USE_ITEM) {
+            return;
+        }
+        assert event.getMaterial() != null;
         if (event.getMaterial() != Material.ENDER_EYE) {
             return;
         }

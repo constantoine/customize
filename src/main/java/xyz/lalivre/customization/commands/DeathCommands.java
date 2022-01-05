@@ -10,17 +10,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.StringUtil;
 import org.jetbrains.annotations.NotNull;
+import xyz.lalivre.customization.events.DeathEvents;
+import xyz.lalivre.customization.types.WaypointData;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class DeathCommands implements CommandExecutor, TabCompleter {
     private final JavaPlugin plugin;
-    public ConcurrentHashMap<UUID, Location> deaths;
 
-    public DeathCommands(JavaPlugin plugin, ConcurrentHashMap<UUID, Location> deaths) {
+    public DeathCommands(@NotNull JavaPlugin plugin) {
         this.plugin = plugin;
-        this.deaths = deaths;
     }
 
     @Override
@@ -49,7 +48,7 @@ public class DeathCommands implements CommandExecutor, TabCompleter {
     }
 
     private void sendLastDeathCoordinates(@NotNull CommandSender sender, @NotNull Player player) {
-        final Location pos = this.deaths.get(player.getUniqueId());
+        final Location pos = player.getPersistentDataContainer().get(DeathEvents.deathKey(this.plugin), new WaypointData(this.plugin));
 
         // If self requested
         if ((sender instanceof Player) && ((Player) sender).getUniqueId() == player.getUniqueId()) {

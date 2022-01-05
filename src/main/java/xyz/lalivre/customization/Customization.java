@@ -8,8 +8,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import xyz.lalivre.customization.commands.DeathCommands;
 import xyz.lalivre.customization.commands.WaypointCommands;
 import xyz.lalivre.customization.events.DeathEvents;
-import xyz.lalivre.customization.events.PlayerInteractEvents;
-import xyz.lalivre.customization.events.SleepEvents;
+import xyz.lalivre.customization.events.PlayerStatisticIncrementEvents;
 import xyz.lalivre.customization.runnables.DayNightRunnables;
 
 import java.util.Objects;
@@ -20,13 +19,11 @@ public final class Customization extends JavaPlugin {
         Server server = getServer();
 
         DeathEvents deathEvents = new DeathEvents(this);
-        SleepEvents sleepEvents = new SleepEvents(this);
-        DeathCommands deathCommands = new DeathCommands(this, deathEvents.getDeaths());
+        DeathCommands deathCommands = new DeathCommands(this);
         WaypointCommands waypointCommands = new WaypointCommands(this);
 
         server.getPluginManager().registerEvents(deathEvents, this);
-        server.getPluginManager().registerEvents(sleepEvents, this);
-        server.getPluginManager().registerEvents(new PlayerInteractEvents(), this);
+        server.getPluginManager().registerEvents(new PlayerStatisticIncrementEvents(), this);
         Objects.requireNonNull(getCommand("death")).setExecutor(deathCommands);
         Objects.requireNonNull(getCommand("death")).setTabCompleter(deathCommands);
         Objects.requireNonNull(getCommand("waypoint")).setExecutor(waypointCommands);
