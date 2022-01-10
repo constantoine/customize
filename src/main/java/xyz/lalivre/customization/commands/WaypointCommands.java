@@ -59,6 +59,9 @@ public class WaypointCommands implements CommandExecutor, TabCompleter {
     @NotNull
     private TextComponent operationAdd(@NotNull Player player, @NotNull String waypointName) {
         HashMap<String, Location> playerWaypoints = WaypointData.getPlayerWaypoints(player, this.plugin);
+        if (playerWaypoints.size() == 10) {
+            return Component.text("Chaque joueur a une limite de 10 waypoints.").color(NamedTextColor.RED);
+        }
         PersistentDataContainer container = player.getPersistentDataContainer();
         if (playerWaypoints.get(waypointName) != null) {
             return Component.text("Ce waypoint existe déjà.").color(NamedTextColor.RED);
