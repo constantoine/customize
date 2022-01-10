@@ -42,7 +42,7 @@ public class WaypointCommands implements CommandExecutor, TabCompleter {
         HashMap<String, Location> waypoints = WaypointData.getPlayerWaypoints(player, this.plugin);
 
         TextComponent.Builder component = Component.empty().toBuilder();
-        if (waypoints.size() == 0) {
+        if (waypoints.isEmpty()) {
             component.append(Component.text("Aucun waypoint à afficher.").color(NamedTextColor.RED));
         } else {
             Iterator<Map.Entry<String, Location>> iterator = new TreeMap<>(waypoints).entrySet().iterator();

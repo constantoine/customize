@@ -39,7 +39,7 @@ public class DayNightRunnables implements Runnable {
         Sound sound;
 
         this.isDay = world.isDayTime();
-        Collection<? extends Player> players = server.getOnlinePlayers();
+        Collection<? extends Player> players = world.getPlayers();
         TextComponent textComponent;
         if (this.isDay) {
             sound = Sound.ENTITY_PLAYER_LEVELUP;
